@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kala Dharohar — The Living Heritage of Indian Art Forms</title>
+<meta name="description" content="Explore the rich tapestry of India's traditional art forms — from Madhubani to Tanjore, Kalighat to Kolam. A curated visual journey through centuries of artistic heritage.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+/* ============================================
+   DESIGN TOKENS & RESET
+   ============================================ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-primary:#0a0a0a;
+  --bg-secondary:#111111;
+  --bg-card:#1a1a1a;
+  --text-primary:#f5f0e8;
+  --text-secondary:#b8b0a0;
+  --text-muted:#6b6560;
+  --accent-gold:#c8a45c;
+  --accent-warm:#d4763a;
+  --accent-deep:#8b3a3a;
+  --accent-saffron:#e87830;
+  --accent-emerald:#2a7a5a;
+  --accent-indigo:#4a3a8a;
+  --glass-bg:rgba(255,255,255,0.03);
+  --glass-border:rgba(255,255,255,0.08);
+  --grain-opacity:0.035;
+  --section-gap:0;
+  --transition-smooth:cubic-bezier(0.22,1,0.36,1);
+  --transition-spring:cubic-bezier(0.34,1.56,0.64,1);
+}
+html{scroll-behavior:smooth;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--accent-gold) var(--bg-primary)}
+body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--text-primary);overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg-primary)}
+::-webkit-scrollbar-thumb{background:var(--accent-gold);border-radius:3px}
+
+/* ============================================
+   GRAIN / NOISE OVERLAY (RAW NOISE INSPIRED)
+   ============================================ */
+body::before{
+  content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity:var(--grain-opacity);pointer-events:none;z-index:10000;
+  animation:grainShift 0.5s steps(4) infinite;
+}
+@keyframes grainShift{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(-2%,-1%)}
+  50%{transform:translate(1%,2%)}
+  75%{transform:translate(-1%,-2%)}
+  100%{transform:translate(2%,1%)}
+}
+
+/* ============================================
+   LOADING SCREEN
+   ============================================ */
+#loader{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:var(--bg-primary);z-index:99999;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  transition:opacity 0.8s var(--transition-smooth), visibility 0.8s;
+}
+#loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loader-mandala{
+  width:80px;height:80px;position:relative;
+  animation:mandalaSpin 3s linear infinite;
+}
+.loader-mandala::before,.loader-mandala::after{
+  content:'';position:absolute;border-radius:50%;
+  border:2px solid transparent;
+}
+.loader-mandala::before{
+  top:0;left:0;right:0;bottom:0;
+  border-top-color:var(--accent-gold);border-bottom-color:var(--accent-warm);
+  animation:mandalaSpin 1.5s linear infinite;
+}
+.loader-mandala::after{
+  top:8px;left:8px;right:8px;bottom:8px;
+  border-left-color:var(--accent-saffron);border-right-color:var(--accent-emerald);
+  animation:mandalaSpin 2s linear infinite reverse;
+}
+.loader-inner{
+  position:absolute;top:16px;left:16px;right:16px;bottom:16px;
+  border-radius:50%;border:2px solid transparent;
+  border-top-color:var(--accent-indigo);border-bottom-color:var(--accent-deep);
+  animation:mandalaSpin 2.5s linear infinite;
+}
+@keyframes mandalaSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.loader-text{
+  margin-top:32px;font-family:'Outfit',sans-serif;font-size:14px;
+  letter-spacing:6px;text-transform:uppercase;color:var(--text-muted);
+  animation:loaderPulse 1.5s ease-in-out infinite;
+}
+@keyframes loaderPulse{0%,100%{opacity:0.4}50%{opacity:1}}
+
+/* ============================================
+   HERO / INTRO SECTION — RAW NOISE STYLE
+   ============================================ */
+#hero{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  background:radial-gradient(ellipse at 20% 50%,rgba(200,164,92,0.08) 0%,transparent 50%),
+             radial-gradient(ellipse at 80% 30%,rgba(212,118,58,0.06) 0%,transparent 50%),
+             radial-gradient(ellipse at 50% 80%,rgba(139,58,58,0.05) 0%,transparent 50%),
+             var(--bg-primary);
+}
+.hero-grid{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background-image:
+    linear-gradient(rgba(200,164,92,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(200,164,92,0.03) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse at center,black 20%,transparent 70%);
+}
+.hero-content{
+  text-align:center;position:relative;z-index:10;
+  max-width:900px;padding:40px 24px;
+}
+.hero-eyebrow{
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:8px;text-transform:uppercase;color:var(--accent-gold);
+  margin-bottom:28px;
+  opacity:0;transform:translateY(20px);
+  animation:heroFadeUp 1s var(--transition-smooth) 0.5s forwards;
+}
+.hero-title{
+  font-family:'Playfair Display',serif;font-size:clamp(42px,8vw,96px);
+  font-weight:900;line-height:1.05;letter-spacing:-2px;
+  background:linear-gradient(135deg,var(--text-primary) 0%,var(--accent-gold) 50%,var(--accent-warm) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  opacity:0;transform:translateY(40px);
+  animation:heroFadeUp 1.2s var(--transition-smooth) 0.8s forwards;
+}
+.hero-subtitle{
+  font-family:'Inter',sans-serif;font-size:clamp(15px,2vw,20px);
+  font-weight:300;color:var(--text-secondary);line-height:1.7;
+  max-width:600px;margin:28px auto 0;
+  opacity:0;transform:translateY(30px);
+  animation:heroFadeUp 1s var(--transition-smooth) 1.2s forwards;
+}
+.hero-divider{
+  width:60px;height:1px;background:var(--accent-gold);margin:36px auto;
+  opacity:0;animation:heroFadeUp 0.8s var(--transition-smooth) 1.5s forwards;
+}
+.hero-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 36px;border:1px solid var(--accent-gold);
+  background:transparent;color:var(--accent-gold);
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  letter-spacing:4px;text-transform:uppercase;text-decoration:none;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:all 0.5s var(--transition-smooth);
+  opacity:0;transform:translateY(20px);
+  animation:heroFadeUp 0.8s var(--transition-smooth) 1.8s forwards;
+}
+.hero-cta::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(200,164,92,0.15),transparent);
+  transition:left 0.6s var(--transition-smooth);
+}
+.hero-cta:hover{background:rgba(200,164,92,0.08);border-color:var(--accent-warm);color:var(--accent-warm);transform:translateY(-2px);box-shadow:0 8px 32px rgba(200,164,92,0.15)}
+.hero-cta:hover::before{left:100%}
+.hero-cta svg{width:16px;height:16px;transition:transform 0.3s}
+.hero-cta:hover svg{transform:translateY(4px)}
+
+.hero-float-element{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,164,92,0.08),transparent 70%);
+  animation:floatDrift 12s ease-in-out infinite;
+}
+.hero-float-element:nth-child(1){width:300px;height:300px;top:10%;left:5%;animation-delay:0s}
+.hero-float-element:nth-child(2){width:200px;height:200px;bottom:20%;right:10%;animation-delay:-4s}
+.hero-float-element:nth-child(3){width:150px;height:150px;top:60%;left:60%;animation-delay:-8s;background:radial-gradient(circle,rgba(212,118,58,0.06),transparent 70%)}
+@keyframes floatDrift{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(20px,-30px) scale(1.05)}
+  66%{transform:translate(-15px,20px) scale(0.95)}
+}
+@keyframes heroFadeUp{to{opacity:1;transform:translateY(0)}}
+
+/* Scroll indicator */
+.scroll-indicator{
+  position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  opacity:0;animation:heroFadeUp 0.6s var(--transition-smooth) 2.2s forwards;
+}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--accent-gold),transparent);animation:scrollPulse 2s ease-in-out infinite}
+@keyframes scrollPulse{0%,100%{opacity:0.3;transform:scaleY(0.7)}50%{opacity:1;transform:scaleY(1)}}
+.scroll-text{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--text-muted)}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+#nav{
+  position:fixed;top:0;left:0;width:100%;z-index:1000;
+  padding:20px 40px;display:flex;align-items:center;justify-content:space-between;
+  transition:all 0.5s var(--transition-smooth);
+}
+#nav.scrolled{
+  background:rgba(10,10,10,0.85);backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid var(--glass-border);padding:14px 40px;
+}
+.nav-logo{
+  font-family:'Playfair Display',serif;font-size:20px;font-weight:700;
+  color:var(--accent-gold);text-decoration:none;letter-spacing:1px;
+}
+.nav-links{display:flex;gap:32px;list-style:none}
+.nav-links a{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;
+  letter-spacing:3px;text-transform:uppercase;color:var(--text-secondary);
+  text-decoration:none;position:relative;transition:color 0.3s;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;
+  background:var(--accent-gold);transition:width 0.4s var(--transition-smooth);
+}
+.nav-links a:hover{color:var(--accent-gold)}
+.nav-links a:hover::after{width:100%}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:8px}
+.nav-hamburger span{width:24px;height:1.5px;background:var(--text-primary);transition:all 0.3s}
+
+/* ============================================
+   SECTION COMMON STYLES
+   ============================================ */
+.section{padding:120px 24px;position:relative}
+.section-header{text-align:center;margin-bottom:80px}
+.section-eyebrow{
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:6px;text-transform:uppercase;color:var(--accent-gold);
+  margin-bottom:20px;
+}
+.section-title{
+  font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,56px);
+  font-weight:700;line-height:1.15;letter-spacing:-1px;
+  color:var(--text-primary);
+}
+.section-desc{
+  font-size:16px;color:var(--text-secondary);line-height:1.8;
+  max-width:600px;margin:20px auto 0;font-weight:300;
+}
+
+/* ============================================
+   ABOUT / INTRODUCTION
+   ============================================ */
+#about{
+  background:linear-gradient(180deg,var(--bg-primary) 0%,var(--bg-secondary) 100%);
+}
+.about-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:80px;
+  max-width:1200px;margin:0 auto;align-items:center;
+}
+.about-visual{
+  position:relative;height:500px;
+  display:flex;align-items:center;justify-content:center;
+}
+.about-circle{
+  width:350px;height:350px;border-radius:50%;
+  border:1px solid var(--glass-border);position:relative;
+  display:flex;align-items:center;justify-content:center;
+  animation:slowRotate 30s linear infinite;
+}
+.about-circle::before{
+  content:'';position:absolute;width:120%;height:120%;border-radius:50%;
+  border:1px dashed rgba(200,164,92,0.1);
+  animation:slowRotate 20s linear infinite reverse;
+}
+.about-inner-circle{
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,164,92,0.1),transparent 70%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Playfair Display',serif;font-size:48px;color:var(--accent-gold);
+  animation:slowRotate 30s linear infinite reverse;
+}
+@keyframes slowRotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.about-dot{
+  position:absolute;width:8px;height:8px;border-radius:50%;
+  background:var(--accent-gold);
+}
+.about-dot:nth-child(1){top:0;left:50%;transform:translateX(-50%)}
+.about-dot:nth-child(2){bottom:0;left:50%;transform:translateX(-50%)}
+.about-dot:nth-child(3){left:0;top:50%;transform:translateY(-50%)}
+.about-dot:nth-child(4){right:0;top:50%;transform:translateY(-50%)}
+
+.about-text h3{
+  font-family:'Playfair Display',serif;font-size:28px;font-weight:700;
+  color:var(--text-primary);margin-bottom:20px;line-height:1.3;
+}
+.about-text p{
+  font-size:15px;line-height:1.9;color:var(--text-secondary);
+  margin-bottom:16px;font-weight:300;
+}
+.about-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:40px;
+}
+.stat-item{
+  text-align:center;padding:20px;
+  border:1px solid var(--glass-border);border-radius:12px;
+  background:var(--glass-bg);
+  transition:all 0.4s var(--transition-smooth);
+}
+.stat-item:hover{border-color:var(--accent-gold);transform:translateY(-4px);box-shadow:0 12px 40px rgba(200,164,92,0.08)}
+.stat-number{
+  font-family:'Playfair Display',serif;font-size:32px;font-weight:700;
+  color:var(--accent-gold);
+}
+.stat-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:4px}
+
+/* ============================================
+   REGIONAL FILTER TABS
+   ============================================ */
+.region-tabs{
+  display:flex;justify-content:center;flex-wrap:wrap;gap:12px;
+  margin-bottom:60px;
+}
+.region-tab{
+  padding:10px 24px;border:1px solid var(--glass-border);border-radius:40px;
+  background:transparent;color:var(--text-secondary);
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
+  letter-spacing:1px;cursor:pointer;
+  transition:all 0.4s var(--transition-smooth);
+}
+.region-tab:hover,.region-tab.active{
+  background:rgba(200,164,92,0.1);border-color:var(--accent-gold);
+  color:var(--accent-gold);
+}
+
+/* ============================================
+   ART GALLERY — MASONRY CARDS
+   ============================================ */
+#gallery{
+  background:var(--bg-secondary);
+  padding-bottom:140px;
+}
+.gallery-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:28px;max-width:1300px;margin:0 auto;
+}
+.art-card{
+  position:relative;border-radius:16px;overflow:hidden;
+  background:var(--bg-card);border:1px solid var(--glass-border);
+  transition:all 0.6s var(--transition-smooth);
+  opacity:0;transform:translateY(40px);
+}
+.art-card.visible{opacity:1;transform:translateY(0)}
+.art-card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 24px 64px rgba(0,0,0,0.4),0 0 0 1px rgba(200,164,92,0.15);
+  border-color:rgba(200,164,92,0.2);
+}
+.art-card-image{
+  width:100%;height:340px;object-fit:cover;
+  transition:transform 0.8s var(--transition-smooth);
+}
+.art-card:hover .art-card-image{transform:scale(1.05)}
+.art-card-overlay{
+  position:absolute;top:0;left:0;width:100%;height:340px;
+  background:linear-gradient(180deg,transparent 40%,rgba(10,10,10,0.7) 100%);
+  pointer-events:none;
+}
+.art-card-region{
+  position:absolute;top:16px;left:16px;
+  padding:6px 14px;border-radius:20px;
+  background:rgba(10,10,10,0.6);backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.08);
+  font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;color:var(--accent-gold);
+}
+.art-card-body{padding:28px}
+.art-card-title{
+  font-family:'Playfair Display',serif;font-size:22px;font-weight:700;
+  color:var(--text-primary);margin-bottom:6px;
+}
+.art-card-state{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--accent-warm);margin-bottom:14px;
+}
+.art-card-desc{
+  font-size:14px;line-height:1.8;color:var(--text-secondary);font-weight:300;
+}
+.art-card-meta{
+  display:flex;gap:16px;margin-top:18px;padding-top:18px;
+  border-top:1px solid var(--glass-border);
+}
+.art-card-tag{
+  padding:4px 12px;border-radius:16px;
+  background:rgba(200,164,92,0.06);border:1px solid rgba(200,164,92,0.1);
+  font-size:11px;color:var(--accent-gold);font-weight:500;
+}
+
+/* Dark map filter — turns OSM tiles into dark theme without needing API key */
+.leaflet-tile-pane{filter:invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) saturate(30%)}
+.leaflet-marker-pane,.leaflet-popup-pane,.leaflet-overlay-pane{filter:none!important}
+
+/* ============================================
+   ADVANCED SCROLL TEXT ANIMATIONS
+   ============================================ */
+.anim-word{display:inline-block;opacity:0;transform:translateY(30px) rotateX(-20deg);transition:opacity 0.6s var(--transition-smooth),transform 0.6s var(--transition-smooth)}
+.anim-word.visible{opacity:1;transform:translateY(0) rotateX(0)}
+.anim-slide-left{opacity:0;transform:translateX(-60px);transition:opacity 0.7s var(--transition-smooth),transform 0.7s var(--transition-smooth)}
+.anim-slide-left.visible{opacity:1;transform:translateX(0)}
+.anim-slide-right{opacity:0;transform:translateX(60px);transition:opacity 0.7s var(--transition-smooth),transform 0.7s var(--transition-smooth)}
+.anim-slide-right.visible{opacity:1;transform:translateX(0)}
+.anim-blur{opacity:0;filter:blur(8px);transform:translateY(20px);transition:opacity 0.8s var(--transition-smooth),filter 0.8s var(--transition-smooth),transform 0.8s var(--transition-smooth)}
+.anim-blur.visible{opacity:1;filter:blur(0);transform:translateY(0)}
+.anim-scale{opacity:0;transform:scale(0.85);transition:opacity 0.7s var(--transition-smooth),transform 0.7s var(--transition-spring)}
+.anim-scale.visible{opacity:1;transform:scale(1)}
+.anim-rotate-in{opacity:0;transform:rotate(-3deg) translateY(30px);transition:opacity 0.6s var(--transition-smooth),transform 0.8s var(--transition-spring)}
+.anim-rotate-in.visible{opacity:1;transform:rotate(0) translateY(0)}
+
+/* Card body text stagger */
+.art-card-body .art-card-title{opacity:0;transform:translateY(16px);transition:opacity 0.5s 0.1s var(--transition-smooth),transform 0.5s 0.1s var(--transition-smooth)}
+.art-card-body .art-card-state{opacity:0;transform:translateY(16px);transition:opacity 0.5s 0.2s var(--transition-smooth),transform 0.5s 0.2s var(--transition-smooth)}
+.art-card-body .art-card-desc{opacity:0;transform:translateY(16px);transition:opacity 0.5s 0.3s var(--transition-smooth),transform 0.5s 0.3s var(--transition-smooth)}
+.art-card-body .art-card-meta{opacity:0;transform:translateY(16px);transition:opacity 0.5s 0.4s var(--transition-smooth),transform 0.5s 0.4s var(--transition-smooth)}
+.art-card.visible .art-card-title,.art-card.visible .art-card-state,.art-card.visible .art-card-desc,.art-card.visible .art-card-meta{opacity:1;transform:translateY(0)}
+
+/* Timeline items animate individually */
+.timeline-item{opacity:0;transform:translateY(40px);transition:opacity 0.7s var(--transition-smooth),transform 0.7s var(--transition-smooth)}
+.timeline-item.visible{opacity:1;transform:translateY(0)}
+.timeline-item:nth-child(odd) .timeline-content{transform:translateX(-30px);transition:transform 0.7s var(--transition-smooth)}
+.timeline-item:nth-child(even) .timeline-content{transform:translateX(30px);transition:transform 0.7s var(--transition-smooth)}
+.timeline-item.visible .timeline-content{transform:translateX(0)}
+
+/* Section title letter spacing animation */
+.section-title.visible{animation:titleSpread 0.8s var(--transition-smooth) forwards}
+@keyframes titleSpread{from{letter-spacing:4px;opacity:0.5}to{letter-spacing:-1px;opacity:1}}
+
+/* Stat counter pop */
+.stat-item{opacity:0;transform:scale(0.8) translateY(20px);transition:all 0.5s var(--transition-spring)}
+.stat-item.visible{opacity:1;transform:scale(1) translateY(0)}
+
+/* ============================================
+   INTERACTIVE MAP SECTION
+   ============================================ */
+#map-section{
+  background:linear-gradient(180deg,var(--bg-secondary) 0%,var(--bg-primary) 100%);
+  padding:120px 24px;
+}
+#map{
+  height:65vh;max-width:1200px;margin:0 auto;border-radius:16px;
+  border:1px solid var(--glass-border);overflow:hidden;
+  box-shadow:0 24px 64px rgba(0,0,0,0.3);
+}
+.leaflet-popup-content-wrapper{
+  background:var(--bg-card)!important;color:var(--text-primary)!important;
+  border:1px solid var(--glass-border)!important;border-radius:12px!important;
+  box-shadow:0 16px 48px rgba(0,0,0,0.4)!important;
+  filter:invert(100%) hue-rotate(180deg) brightness(105%) contrast(110%) saturate(200%)!important;
+}
+.leaflet-popup-tip{background:var(--bg-card)!important;filter:invert(100%) hue-rotate(180deg) brightness(105%) contrast(110%)!important}
+.leaflet-popup-content h2{
+  font-family:'Playfair Display',serif!important;font-size:18px!important;
+  color:var(--accent-gold)!important;margin:0 0 8px!important;
+}
+.leaflet-popup-content b{color:var(--accent-warm)!important}
+.leaflet-popup-content p{color:var(--text-secondary)!important;font-size:13px!important;line-height:1.7!important}
+.leaflet-control-zoom a{filter:invert(100%) hue-rotate(180deg)!important;background:var(--bg-card)!important}
+.leaflet-control-attribution{filter:invert(100%) hue-rotate(180deg)!important}
+
+/* ============================================
+   TIMELINE SECTION
+   ============================================ */
+#timeline{
+  background:var(--bg-primary);
+  padding:120px 24px;
+}
+.timeline-container{
+  max-width:800px;margin:0 auto;position:relative;
+}
+.timeline-line{
+  position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:linear-gradient(to bottom,transparent,var(--accent-gold),transparent);
+  transform:translateX(-50%);
+}
+.timeline-item{
+  display:flex;align-items:center;margin-bottom:60px;
+  position:relative;
+}
+.timeline-item:nth-child(odd){flex-direction:row-reverse;text-align:right}
+.timeline-dot{
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:16px;height:16px;border-radius:50%;
+  background:var(--bg-primary);border:2px solid var(--accent-gold);
+  z-index:2;transition:all 0.3s;
+}
+.timeline-item:hover .timeline-dot{
+  background:var(--accent-gold);box-shadow:0 0 20px rgba(200,164,92,0.4);
+}
+.timeline-content{
+  width:calc(50% - 40px);padding:24px;
+  background:var(--glass-bg);border:1px solid var(--glass-border);
+  border-radius:12px;transition:all 0.4s var(--transition-smooth);
+}
+.timeline-item:hover .timeline-content{
+  border-color:rgba(200,164,92,0.2);
+  box-shadow:0 8px 32px rgba(200,164,92,0.06);
+}
+.timeline-era{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--accent-gold);margin-bottom:8px;
+}
+.timeline-title{
+  font-family:'Playfair Display',serif;font-size:18px;font-weight:700;
+  color:var(--text-primary);margin-bottom:8px;
+}
+.timeline-desc{font-size:13px;line-height:1.7;color:var(--text-secondary);font-weight:300}
+
+/* ============================================
+   QUOTE / FEATURE BANNER
+   ============================================ */
+#quote-banner{
+  padding:100px 24px;text-align:center;
+  background:radial-gradient(ellipse at center,rgba(200,164,92,0.05) 0%,transparent 60%),
+             var(--bg-secondary);
+}
+.quote-text{
+  font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,42px);
+  font-style:italic;font-weight:400;line-height:1.5;
+  color:var(--text-primary);max-width:800px;margin:0 auto;
+}
+.quote-author{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--accent-gold);margin-top:28px;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+#footer{
+  background:var(--bg-primary);
+  border-top:1px solid var(--glass-border);
+  padding:60px 24px 40px;text-align:center;
+}
+.footer-logo{
+  font-family:'Playfair Display',serif;font-size:24px;font-weight:700;
+  color:var(--accent-gold);margin-bottom:16px;
+}
+.footer-text{font-size:13px;color:var(--text-muted);line-height:1.7;max-width:500px;margin:0 auto 24px}
+.footer-links{display:flex;justify-content:center;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.footer-links a{
+  font-size:12px;color:var(--text-secondary);text-decoration:none;
+  letter-spacing:2px;text-transform:uppercase;font-weight:500;
+  transition:color 0.3s;
+}
+.footer-links a:hover{color:var(--accent-gold)}
+.footer-copyright{font-size:11px;color:var(--text-muted);letter-spacing:2px}
+
+/* ============================================
+   SCROLL REVEAL ANIMATIONS
+   ============================================ */
+.reveal{
+  opacity:0;transform:translateY(40px);
+  transition:opacity 0.8s var(--transition-smooth),transform 0.8s var(--transition-smooth);
+}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:0.15s}
+.reveal-delay-2{transition-delay:0.3s}
+.reveal-delay-3{transition-delay:0.45s}
+.reveal-delay-4{transition-delay:0.6s}
+.reveal-delay-5{transition-delay:0.75s}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media(max-width:1024px){
+  .about-grid{grid-template-columns:1fr;gap:40px}
+  .about-visual{height:300px}
+  .about-circle{width:250px;height:250px}
+  .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+}
+@media(max-width:768px){
+  .nav-links{display:none}
+  .nav-hamburger{display:flex}
+  #nav{padding:16px 20px}
+  .section{padding:80px 16px}
+  .gallery-grid{grid-template-columns:1fr}
+  .about-stats{grid-template-columns:1fr}
+  .timeline-line{left:20px}
+  .timeline-item,.timeline-item:nth-child(odd){flex-direction:row;text-align:left}
+  .timeline-dot{left:20px}
+  .timeline-content{width:calc(100% - 60px);margin-left:auto}
+  .region-tabs{gap:8px}
+  .region-tab{padding:8px 16px;font-size:11px}
+  #map{height:50vh}
+}
+@media(max-width:480px){
+  .hero-title{letter-spacing:-1px}
+  .hero-cta{padding:14px 28px;font-size:11px;letter-spacing:3px}
+  .art-card-image,.art-card-overlay{height:260px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-mandala">
+    <div class="loader-inner"></div>
+  </div>
+  <div class="loader-text">Discovering Heritage</div>
+</div>
+
+<!-- NAVIGATION -->
+<nav id="nav">
+  <a href="#hero" class="nav-logo">Kala Dharohar</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+    <li><a href="#map-section">Map</a></li>
+  </ul>
+  <button class="nav-hamburger" id="hamburger" aria-label="Toggle navigation menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO — RAW NOISE INTRO -->
+<section id="hero">
+  <div class="hero-float-element"></div>
+  <div class="hero-float-element"></div>
+  <div class="hero-float-element"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">A Curated Exhibition</div>
+    <h1 class="hero-title">The Living<br>Art of India</h1>
+    <p class="hero-subtitle">Journey through millennia of artistic brilliance — from the sacred scrolls of Bengal to the golden Tanjore panels of Tamil Nadu, every stroke tells a story of culture, devotion, and imagination.</p>
+    <div class="hero-divider"></div>
+    <a href="#gallery" class="hero-cta">
+      Explore the Collection
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </a>
+  </div>
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
+    <span class="scroll-text">Scroll</span>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="section">
+  <div class="about-grid">
+    <div class="about-visual reveal">
+      <div class="about-circle">
+        <div class="about-dot"></div>
+        <div class="about-dot"></div>
+        <div class="about-dot"></div>
+        <div class="about-dot"></div>
+        <div class="about-inner-circle">॥</div>
+      </div>
+    </div>
+    <div class="about-text">
+      <div class="section-eyebrow reveal">Heritage & Legacy</div>
+      <h3 class="reveal reveal-delay-1">A Civilization Painted in a Thousand Hues</h3>
+      <p class="reveal reveal-delay-2">India's artistic traditions span over 5,000 years, weaving together the sacred and the secular, the royal and the rural. From the cave paintings of Ajanta to the vibrant folk traditions of Bengal's Patuas, each art form carries the DNA of its region — its climate, its mythology, and its people.</p>
+      <p class="reveal reveal-delay-3">This exhibition brings together the most significant traditional art forms from across the Indian subcontinent, with special focus on the rich artistic legacies of West Bengal and Tamil Nadu alongside treasures from Rajasthan, Maharashtra, Odisha, Bihar, and Madhya Pradesh.</p>
+      <div class="about-stats reveal reveal-delay-4">
+        <div class="stat-item">
+          <div class="stat-number">14+</div>
+          <div class="stat-label">Art Forms</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">10</div>
+          <div class="stat-label">States</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">5000+</div>
+          <div class="stat-label">Years</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE BANNER -->
+<section id="quote-banner">
+  <div class="reveal">
+    <p class="quote-text">"Art is not what you see, but what you make others see — and Indian art makes the world see the infinite."</p>
+    <div class="quote-author">— Inspired by Edgar Degas</div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery" class="section">
+  <div class="section-header">
+    <div class="section-eyebrow reveal">The Collection</div>
+    <h2 class="section-title reveal reveal-delay-1">Art Forms of India</h2>
+    <p class="section-desc reveal reveal-delay-2">Discover masterpieces from every corner of the subcontinent — each carrying the soul of its land.</p>
+  </div>
+
+  <div class="region-tabs reveal">
+    <button class="region-tab active" data-filter="all">All Regions</button>
+    <button class="region-tab" data-filter="west-bengal">West Bengal</button>
+    <button class="region-tab" data-filter="tamil-nadu">Tamil Nadu</button>
+    <button class="region-tab" data-filter="maharashtra">Maharashtra</button>
+    <button class="region-tab" data-filter="rajasthan">Rajasthan</button>
+    <button class="region-tab" data-filter="odisha">Odisha</button>
+    <button class="region-tab" data-filter="bihar">Bihar</button>
+    <button class="region-tab" data-filter="others">Others</button>
+  </div>
+
+  <div class="gallery-grid" id="galleryGrid">
+
+    <!-- 1. KALIGHAT PAINTING — WEST BENGAL -->
+    <article class="art-card" data-region="west-bengal">
+      <img src="images/kalighat.jpg" alt="Kalighat Painting from West Bengal" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">West Bengal</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Kalighat Painting</h3>
+        <div class="art-card-state">Kolkata, West Bengal</div>
+        <p class="art-card-desc">Born near the Kalighat temple in 19th-century Kolkata, this art form features bold, sweeping brushstrokes and simplified, powerful forms. Originally depicting Hindu deities, it evolved into sharp social commentary — making it India's earliest form of visual satire.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Folk Art</span>
+          <span class="art-card-tag">19th Century</span>
+          <span class="art-card-tag">Watercolor</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 2. TANJORE PAINTING — TAMIL NADU -->
+    <article class="art-card" data-region="tamil-nadu">
+      <img src="images/tanjore.jpg" alt="Tanjore Painting from Tamil Nadu" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Tamil Nadu</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Tanjore Painting</h3>
+        <div class="art-card-state">Thanjavur, Tamil Nadu</div>
+        <p class="art-card-desc">Celebrated for their opulence, Tanjore paintings use gold foil, semi-precious stones, and rich, jewel-toned colours to depict Hindu deities. Originating during the Maratha rule of Thanjavur, they exemplify South India's devotion crystallized in art.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Classical</span>
+          <span class="art-card-tag">Gold Leaf</span>
+          <span class="art-card-tag">16th Century</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 3. MADHUBANI — BIHAR -->
+    <article class="art-card" data-region="bihar">
+      <img src="images/madhubani.jpg" alt="Madhubani Painting from Bihar" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Bihar</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Madhubani Painting</h3>
+        <div class="art-card-state">Mithila, Bihar</div>
+        <p class="art-card-desc">Practised for over 2,500 years by the women of Mithila, Madhubani art transforms walls and floors into living mythologies. Its geometric precision, vibrant natural pigments, and symbolic motifs — fish, peacocks, lotus — narrate stories of fertility, devotion, and cosmic harmony.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Folk Art</span>
+          <span class="art-card-tag">2500+ Years</span>
+          <span class="art-card-tag">Natural Dyes</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 4. WARLI — MAHARASHTRA -->
+    <article class="art-card" data-region="maharashtra">
+      <img src="images/warli.jpg" alt="Warli Art from Maharashtra" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Maharashtra</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Warli Painting</h3>
+        <div class="art-card-state">Thane District, Maharashtra</div>
+        <p class="art-card-desc">One of the oldest art forms on Earth, Warli painting uses only white rice paste on ochre mud walls. Its minimalist geometric vocabulary — circles, triangles, and lines — captures the rhythms of tribal life: harvest dances, hunts, wedding processions, and the eternal bond with nature.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Tribal Art</span>
+          <span class="art-card-tag">3000+ Years</span>
+          <span class="art-card-tag">Geometric</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 5. PATTACHITRA — ODISHA -->
+    <article class="art-card" data-region="odisha">
+      <img src="images/pattachitra.jpg" alt="Pattachitra Painting from Odisha" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Odisha</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Pattachitra</h3>
+        <div class="art-card-state">Raghurajpur, Odisha</div>
+        <p class="art-card-desc">Painted on specially prepared cotton cloth with natural colors, Pattachitra is a visual scripture. Devotional narratives unfold panel by panel — Jagannath, Ramayana, Mahabharata — rendered with extraordinary line-control and ornate floral borders that frame each sacred story.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Devotional</span>
+          <span class="art-card-tag">12th Century</span>
+          <span class="art-card-tag">Cloth Painting</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 6. KOLAM — TAMIL NADU -->
+    <article class="art-card" data-region="tamil-nadu">
+      <img src="images/kolam.jpg" alt="Kolam Floor Art from Tamil Nadu" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Tamil Nadu</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Kolam</h3>
+        <div class="art-card-state">Tamil Nadu & South India</div>
+        <p class="art-card-desc">Drawn at dawn with rice flour on freshly washed thresholds, Kolam is a daily mathematical meditation. Its infinite loops and fractal symmetries welcome prosperity while feeding ants and insects — a perfect union of aesthetics, geometry, ecology, and devotion that is recreated fresh each morning.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Floor Art</span>
+          <span class="art-card-tag">Ephemeral</span>
+          <span class="art-card-tag">Geometric</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 7. PATUA SCROLL — WEST BENGAL -->
+    <article class="art-card" data-region="west-bengal">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Bengal_Patachitra_3.jpg/400px-Bengal_Patachitra_3.jpg" alt="Bengal Patachitra Scroll Painting" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">West Bengal</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Patachitra (Bengal Scroll)</h3>
+        <div class="art-card-state">Midnapore, West Bengal</div>
+        <p class="art-card-desc">The Patua storytellers of Bengal unroll long vertical scrolls while singing narrative ballads — a living tradition merging visual art, music, and theatre. These scrolls once carried Mangalkavya epics; today they tackle climate change, social justice, and pandemic awareness with the same vivid visual grammar.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Scroll Art</span>
+          <span class="art-card-tag">Performing Art</span>
+          <span class="art-card-tag">Narrative</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 8. CHOLA BRONZE — TAMIL NADU -->
+    <article class="art-card" data-region="tamil-nadu">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Chola_Nataraja.jpg/398px-Chola_Nataraja.jpg" alt="Chola Bronze Nataraja Sculpture" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Tamil Nadu</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Chola Bronze Sculpture</h3>
+        <div class="art-card-state">Thanjavur & Kumbakonam, Tamil Nadu</div>
+        <p class="art-card-desc">The lost-wax bronze casting of the Chola dynasty (9th–13th century) produced what many consider the pinnacle of Indian sculpture. The iconic Nataraja — Shiva as cosmic dancer — is recognized worldwide as a masterpiece of metallurgy and spiritual expression, embodying creation and destruction in a single form.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Sculpture</span>
+          <span class="art-card-tag">9th Century</span>
+          <span class="art-card-tag">Bronze</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 9. RAJASTHANI MINIATURE — RAJASTHAN -->
+    <article class="art-card" data-region="rajasthan">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Radha_and_Krishna_in_the_boat_of_love_-_Google_Art_Project.jpg/445px-Radha_and_Krishna_in_the_boat_of_love_-_Google_Art_Project.jpg" alt="Rajasthani Miniature Painting" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Rajasthan</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Rajasthani Miniature</h3>
+        <div class="art-card-state">Jaipur, Jodhpur & Udaipur, Rajasthan</div>
+        <p class="art-card-desc">Patronized by Rajput courts, these exquisite miniatures capture royal life, divine love stories of Radha-Krishna, and Rajasthan's majestic landscapes in astonishing detail. Using brushes made from single squirrel hairs, artists created worlds of jewel-like precision on surfaces no larger than a palm.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Miniature</span>
+          <span class="art-card-tag">16th Century</span>
+          <span class="art-card-tag">Court Art</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 10. AJANTA MURALS — MAHARASHTRA -->
+    <article class="art-card" data-region="maharashtra">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Ajanta_Cave_1_Padmapani_Buddha.jpg/375px-Ajanta_Cave_1_Padmapani_Buddha.jpg" alt="Ajanta Cave Padmapani Mural" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Maharashtra</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Ajanta Cave Murals</h3>
+        <div class="art-card-state">Aurangabad, Maharashtra</div>
+        <p class="art-card-desc">Hidden in a horseshoe-shaped gorge, the 30 rock-cut caves of Ajanta preserve some of humanity's greatest paintings — Buddhist Jataka tales rendered in earth pigments over 2,000 years ago. Their mastery of chiaroscuro, perspective, and emotional expression predates Renaissance techniques by a millennium.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Mural</span>
+          <span class="art-card-tag">2nd Century BCE</span>
+          <span class="art-card-tag">UNESCO</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 11. DOKRA — WEST BENGAL -->
+    <article class="art-card" data-region="west-bengal">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Dokra_Art.jpg" alt="Dokra Metal Craft from Bengal" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">West Bengal</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Dokra Metal Craft</h3>
+        <div class="art-card-state">Bankura & Purulia, West Bengal</div>
+        <p class="art-card-desc">Using the lost-wax (cire perdue) technique unchanged for 4,000 years, the Dokra artisans of Bengal create hauntingly beautiful tribal figurines, horses, elephants, and deities. Each piece is unique — the mould is destroyed in the casting, making every sculpture a one-of-a-kind treasure.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Metal Craft</span>
+          <span class="art-card-tag">4000 Years</span>
+          <span class="art-card-tag">Lost-Wax</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 12. GOND ART — MADHYA PRADESH -->
+    <article class="art-card" data-region="others">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Gond_art_of_India_MG_8704.jpg/400px-Gond_art_of_India_MG_8704.jpg" alt="Gond Painting from Madhya Pradesh" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Madhya Pradesh</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Gond Painting</h3>
+        <div class="art-card-state">Mandla & Dindori, Madhya Pradesh</div>
+        <p class="art-card-desc">The Gond community transforms their deep connection with forests into mesmerizing dot-and-dash compositions. Trees, birds, tigers, and myths are rendered in intricate patterns that reveal hidden worlds within worlds — a visual philosophy where every creature holds the memory of the forest.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Tribal Art</span>
+          <span class="art-card-tag">Indigenous</span>
+          <span class="art-card-tag">Dot Pattern</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 13. KANTHA — WEST BENGAL -->
+    <article class="art-card" data-region="west-bengal">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Artist%2C_maker_unknown%2C_Bengali_-_Kantha_%28Embroidered_Quilt%29_-_Google_Art_Project.jpg/440px-Artist%2C_maker_unknown%2C_Bengali_-_Kantha_%28Embroidered_Quilt%29_-_Google_Art_Project.jpg" alt="Kantha Embroidery from Bengal" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">West Bengal</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Kantha Embroidery</h3>
+        <div class="art-card-state">Bengal (West Bengal & Bangladesh)</div>
+        <p class="art-card-desc">Born from frugality, Kantha transforms discarded saris into quilted masterpieces through running stitches that create dreamlike scenes — a tree of life, a lotus pond, village processions. Each Kantha is a mother's love stitched into fabric — traditionally gifted to daughters at marriage.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Textile Art</span>
+          <span class="art-card-tag">Embroidery</span>
+          <span class="art-card-tag">Sustainable</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 14. PHAD PAINTING — RAJASTHAN -->
+    <article class="art-card" data-region="rajasthan">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Phad_painting2.jpg/500px-Phad_painting2.jpg" alt="Phad Painting from Rajasthan" class="art-card-image" loading="lazy">
+      <div class="art-card-overlay"></div>
+      <span class="art-card-region">Rajasthan</span>
+      <div class="art-card-body">
+        <h3 class="art-card-title">Phad Painting</h3>
+        <div class="art-card-state">Bhilwara, Rajasthan</div>
+        <p class="art-card-desc">Phad is a 700-year-old tradition of narrative scroll painting depicting the heroic deeds of folk deities Pabuji and Devnarayan. Painted on long bolts of cloth, these scrolls serve as portable temples — carried by Bhopa priests who perform all-night recitations illuminated only by lamplight.</p>
+        <div class="art-card-meta">
+          <span class="art-card-tag">Scroll Art</span>
+          <span class="art-card-tag">Narrative</span>
+          <span class="art-card-tag">700 Years</span>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section id="timeline" class="section">
+  <div class="section-header">
+    <div class="section-eyebrow reveal">Through the Ages</div>
+    <h2 class="section-title reveal reveal-delay-1">A Timeline of Indian Art</h2>
+    <p class="section-desc reveal reveal-delay-2">Key moments that shaped the artistic soul of the subcontinent.</p>
+  </div>
+  <div class="timeline-container reveal">
+    <div class="timeline-line"></div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="timeline-era">3000 BCE</div>
+        <div class="timeline-title">Warli & Tribal Origins</div>
+        <div class="timeline-desc">The earliest roots of Indian art emerge in tribal communities — geometric symbols on cave walls and mud huts that would become the Warli tradition.</div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="timeline-era">2nd Century BCE</div>
+        <div class="timeline-title">Ajanta Cave Paintings</div>
+        <div class="timeline-desc">Buddhist monks begin painting the magnificent murals of Ajanta, creating a visual encyclopedia of Jataka tales over the next seven centuries.</div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="timeline-era">9th–13th Century</div>
+        <div class="timeline-title">Chola Bronze Age</div>
+        <div class="timeline-desc">The Chola dynasty of Tamil Nadu produces the world's finest bronze sculptures — the Nataraja becomes the ultimate symbol of Indian art.</div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="timeline-era">12th Century</div>
+        <div class="timeline-title">Pattachitra Emerges</div>
+        <div class="timeline-desc">The temple town of Puri nurtures a tradition of devotional cloth paintings that will endure for nearly a millennium.</div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="timeline-era">16th–17th Century</div>
+        <div class="timeline-title">Miniature & Tanjore Golden Age</div>
+        <div class="timeline-desc">Mughal and Rajput miniature painting flourishes alongside Tanjore's gold-leaf masterworks — two parallel peaks of artistic refinement.</div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="timeline-era">19th Century</div>
+        <div class="timeline-title">Kalighat Revolution</div>
+        <div class="timeline-desc">Near Calcutta's Kalighat temple, artists create bold, satirical paintings that bridge folk tradition and modern commentary — India's first popular art movement.</div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="timeline-era">21st Century</div>
+        <div class="timeline-title">Global Renaissance</div>
+        <div class="timeline-desc">Indian art forms gain international recognition — Madhubani appears in fashion, Warli in architecture, and Bengal's Patua scrolls address global issues.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERACTIVE MAP -->
+<section id="map-section" class="section">
+  <div class="section-header">
+    <div class="section-eyebrow reveal">Explore Origins</div>
+    <h2 class="section-title reveal reveal-delay-1">Interactive Art Map</h2>
+    <p class="section-desc reveal reveal-delay-2">Click on markers to discover the birthplace and context of each art tradition.</p>
+  </div>
+  <div id="map" class="reveal"></div>
+</section>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <div class="footer-logo">Kala Dharohar</div>
+  <p class="footer-text">A curated digital exhibition celebrating India's extraordinary artistic heritage — from ancient cave murals to living folk traditions.</p>
+  <div class="footer-links">
+    <a href="#hero">Home</a>
+    <a href="#about">About</a>
+    <a href="#gallery">Gallery</a>
+    <a href="#timeline">Timeline</a>
+    <a href="#map-section">Map</a>
+  </div>
+  <div class="footer-copyright">© 2026 Kala Dharohar — The Living Heritage of Indian Art Forms</div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ===== LOADER ===== */
+  window.addEventListener('load',function(){
+    setTimeout(function(){
+      document.getElementById('loader').classList.add('hidden');
+    },1800);
+  });
+
+  /* ===== NAVBAR SCROLL ===== */
+  const nav=document.getElementById('nav');
+  let lastScroll=0;
+  window.addEventListener('scroll',function(){
+    const st=window.scrollY;
+    nav.classList.toggle('scrolled',st>80);
+    lastScroll=st;
+  });
+
+  /* ===== HAMBURGER ===== */
+  const hamburger=document.getElementById('hamburger');
+  const navLinks=document.querySelector('.nav-links');
+  hamburger.addEventListener('click',function(){
+    const isOpen=navLinks.style.display==='flex';
+    navLinks.style.display=isOpen?'none':'flex';
+    navLinks.style.position='fixed';
+    navLinks.style.top='60px';
+    navLinks.style.left='0';
+    navLinks.style.width='100%';
+    navLinks.style.flexDirection='column';
+    navLinks.style.background='rgba(10,10,10,0.95)';
+    navLinks.style.padding='24px';
+    navLinks.style.gap='20px';
+    navLinks.style.backdropFilter='blur(20px)';
+    navLinks.style.borderBottom='1px solid rgba(255,255,255,0.08)';
+    navLinks.style.zIndex='999';
+    if(isOpen){navLinks.removeAttribute('style')}
+  });
+
+  /* ===== SCROLL REVEAL ===== */
+  const revealElements=document.querySelectorAll('.reveal,.art-card');
+  const revealObserver=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+  revealElements.forEach(function(el){revealObserver.observe(el)});
+
+  /* ===== REGION FILTER ===== */
+  const tabs=document.querySelectorAll('.region-tab');
+  const cards=document.querySelectorAll('.art-card');
+  tabs.forEach(function(tab){
+    tab.addEventListener('click',function(){
+      tabs.forEach(function(t){t.classList.remove('active')});
+      tab.classList.add('active');
+      const filter=tab.dataset.filter;
+      cards.forEach(function(card){
+        const region=card.dataset.region;
+        const show=filter==='all'||region===filter;
+        card.style.display=show?'':'none';
+        if(show){
+          card.classList.remove('visible');
+          requestAnimationFrame(function(){
+            requestAnimationFrame(function(){
+              card.classList.add('visible');
+            });
+          });
+        }
+      });
+    });
+  });
+
+  /* ===== SMOOTH ANCHOR SCROLL ===== */
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      const target=document.querySelector(this.getAttribute('href'));
+      if(target){
+        target.scrollIntoView({behavior:'smooth',block:'start'});
+        // Close mobile menu
+        if(window.innerWidth<=768){navLinks.removeAttribute('style')}
+      }
+    });
+  });
+
+  /* ===== LEAFLET MAP ===== */
+  const map=L.map('map',{
+    scrollWheelZoom:false,
+    zoomControl:true
+  }).setView([22.5,79.0],5);
+
+  /* Use standard OSM tiles — dark theme applied via CSS filter on .leaflet-tile-pane */
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:18,
+    attribution:''
+  }).addTo(map);
+
+  const goldIcon=L.divIcon({
+    className:'custom-marker',
+    html:'<div style="width:14px;height:14px;background:radial-gradient(circle,#c8a45c,#8b6914);border-radius:50%;border:2px solid #f5f0e8;box-shadow:0 0 12px rgba(200,164,92,0.6);"></div>',
+    iconSize:[14,14],
+    iconAnchor:[7,7]
+  });
+
+  const places=[
+    ["Kalighat Painting",22.520,88.345,"West Bengal","Bold folk painting with social satire","Born near the Kalighat temple in 19th-century Kolkata, featuring powerful brushstrokes and simplified forms that evolved into India's earliest visual commentary."],
+    ["Bengal Patachitra",22.420,87.320,"West Bengal","Narrative scroll painting","Patua artists of Midnapore unroll long vertical scrolls while singing ballads — a living tradition merging visual art, music, and performance."],
+    ["Dokra Craft",23.230,87.060,"West Bengal","Lost-wax metal casting","4,000-year-old tribal metal craft from Bankura using the cire perdue technique, creating unique figurines and ritual objects."],
+    ["Kantha Embroidery",23.800,88.400,"West Bengal","Quilted embroidery textile art","Layers of old saris stitched together with running stitches creating dreamlike scenes — a mother's love made tangible in fabric."],
+    ["Tanjore Painting",10.787,79.137,"Tamil Nadu","Gold-leaf devotional art","Opulent paintings using gold foil and semi-precious stones to depict Hindu deities, originating during Maratha rule of Thanjavur."],
+    ["Kolam",11.000,78.000,"Tamil Nadu","Geometric floor art","Daily mathematical meditation drawn at dawn with rice flour, its infinite loops welcoming prosperity while feeding insects."],
+    ["Chola Bronze",10.960,79.380,"Tamil Nadu","Lost-wax bronze sculpture","The Chola dynasty's bronze masterworks, including the iconic Nataraja, represent the pinnacle of Indian metallurgical art."],
+    ["Madhubani / Mithila",26.350,86.070,"Bihar","Mithila folk painting","2,500-year-old tradition with geometric precision, vibrant pigments, and symbolic motifs narrating cosmic harmony."],
+    ["Warli Region",19.800,73.000,"Maharashtra","Tribal geometric painting","One of Earth's oldest art forms — white rice paste on ochre walls depicting dance circles, harvests, and nature."],
+    ["Ajanta Caves",20.552,75.703,"Maharashtra","Buddhist cave murals","2,000-year-old masterworks preserved in 30 rock-cut caves — their technique predates Renaissance methods by a millennium."],
+    ["Pattachitra",19.813,85.831,"Odisha","Devotional cloth painting","Painted on prepared cotton with natural colours, depicting sacred narratives with extraordinary line-control and ornate borders."],
+    ["Rajasthani Miniature",26.912,75.787,"Rajasthan","Royal court miniature painting","Exquisite miniatures capturing royal life and divine love stories using brushes made from single squirrel hairs."],
+    ["Phad Painting",25.350,74.630,"Rajasthan","Narrative scroll painting","700-year-old scroll tradition depicting folk deity Pabuji, serving as portable temples for Bhopa priests."],
+    ["Gond Painting",22.590,80.340,"Madhya Pradesh","Tribal dot-and-dash art","The Gond community's mesmerizing compositions reveal hidden worlds within worlds — a visual philosophy of the forest."],
+    ["Khajuraho",24.831,79.919,"Madhya Pradesh","Temple sculpture","Richly carved temple surfaces depicting divine, human, and everyday-life imagery in extraordinary sculptural detail."]
+  ];
+
+  places.forEach(function(p){
+    L.marker([p[1],p[2]],{icon:goldIcon}).addTo(map)
+      .bindPopup(
+        '<h2>'+p[0]+'</h2>'+
+        '<b>Region:</b> '+p[3]+'<br>'+
+        '<b>Art Tradition:</b> '+p[4]+
+        '<p>'+p[5]+'</p>',
+        {maxWidth:300}
+      );
+  });
+
+  /* ===== PARALLAX SUBTLE EFFECT ===== */
+  const floats=document.querySelectorAll('.hero-float-element');
+  window.addEventListener('mousemove',function(e){
+    const x=(e.clientX/window.innerWidth-0.5)*20;
+    const y=(e.clientY/window.innerHeight-0.5)*20;
+    floats.forEach(function(el,i){
+      const factor=(i+1)*0.5;
+      el.style.transform='translate('+x*factor+'px,'+y*factor+'px)';
+    });
+  });
+
+  /* ===== ADVANCED SCROLL ANIMATIONS ===== */
+  /* Split section titles into animated words */
+  document.querySelectorAll('.section-title,.quote-text,.hero-title,.about-text h3').forEach(function(el){
+    if(el.classList.contains('hero-title')) return; /* hero has its own CSS anim */
+    var html=el.innerHTML;
+    var words=html.split(/\s+/);
+    el.innerHTML=words.map(function(w,i){
+      return '<span class="anim-word" style="transition-delay:'+((i*0.06)+0.1)+'s">'+w+'</span>';
+    }).join(' ');
+    el.style.opacity='1';el.style.transform='none';
+  });
+
+  /* Observe animated words */
+  var wordObserver=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        var words=entry.target.querySelectorAll('.anim-word');
+        words.forEach(function(w){w.classList.add('visible')});
+        wordObserver.unobserve(entry.target);
+      }
+    });
+  },{threshold:0.2});
+  document.querySelectorAll('.section-title,.quote-text,.about-text h3').forEach(function(el){
+    wordObserver.observe(el);
+  });
+
+  /* Observe timeline items individually */
+  var tlObserver=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        tlObserver.unobserve(entry.target);
+      }
+    });
+  },{threshold:0.15,rootMargin:'0px 0px -60px 0px'});
+  document.querySelectorAll('.timeline-item').forEach(function(el){tlObserver.observe(el)});
+
+  /* Observe stat items individually */
+  var statObserver=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        statObserver.unobserve(entry.target);
+      }
+    });
+  },{threshold:0.3});
+  document.querySelectorAll('.stat-item').forEach(function(el){statObserver.observe(el)});
+
+  /* Add slide direction classes to about paragraphs */
+  document.querySelectorAll('.about-text p').forEach(function(el,i){
+    el.classList.add(i%2===0?'anim-slide-left':'anim-slide-right');
+  });
+  var slideObserver=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        slideObserver.unobserve(entry.target);
+      }
+    });
+  },{threshold:0.2});
+  document.querySelectorAll('.anim-slide-left,.anim-slide-right,.anim-blur,.anim-scale').forEach(function(el){slideObserver.observe(el)});
+
+  /* Quote blur-in animation */
+  document.querySelectorAll('.quote-author').forEach(function(el){el.classList.add('anim-blur')});
+  document.querySelectorAll('.anim-blur').forEach(function(el){slideObserver.observe(el)});
+
+})();
+</script>
+</body>
+</html>
